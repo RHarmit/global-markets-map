@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backend server for Global Markets Map — fetches live index quotes every hour."""
+"""Backend server for Global Markets Map — real-time SSE streaming of live index quotes."""
 
 import asyncio
 import csv
@@ -11,8 +11,9 @@ import urllib.request
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 # ── Ticker → country metadata (static) ──────────────────────────
 COUNTRY_META = {
@@ -120,6 +121,12 @@ TICKER_SYMBOLS = list(COUNTRY_META.keys())
 latest_data = {"lastUpdated": None, "countries": []}
 fetch_lock = asyncio.Lock()
 
+# SSE subscribers — each is an asyncio.Queue
+sse_subscribers: list[asyncio.Queue] = []
+sse_lock = asyncio.Lock()
+
+REFRESH_INTERVAL = 300  # 5 minutes
+
 
 def parse_number(s):
     """Parse a number string, handling commas."""
@@ -136,15 +143,12 @@ def parse_markdown_content(content):
     countries = []
     for ticker, meta in COUNTRY_META.items():
         entry = {**meta}
-        # Find the data row for this ticker
-        # Pattern: | ticker | name | ... | price | change | changesPercentage | ... |
         pattern = rf'\| {re.escape(ticker)} \|'
         for line in content.split("\n"):
             if re.search(pattern, line):
                 parts = [p.strip() for p in line.split("|")]
-                parts = [p for p in parts if p]  # remove empty strings
+                parts = [p for p in parts if p]
                 if len(parts) >= 8:
-                    # Columns: symbol, name, timestamp, fetched_at, market_status, price, change, changesPercentage, [more...]
                     try:
                         entry["price"] = parse_number(parts[5])
                         entry["change"] = parse_number(parts[6])
@@ -188,8 +192,26 @@ def parse_csv_from_url(url):
         return None
 
 
+async def broadcast_to_subscribers(data: dict):
+    """Push data to all connected SSE clients."""
+    payload = f"data: {json.dumps(data)}\n\n"
+    async with sse_lock:
+        dead = []
+        for i, q in enumerate(sse_subscribers):
+            try:
+                q.put_nowait(payload)
+            except asyncio.QueueFull:
+                dead.append(i)
+        # Remove dead queues (overflow = client too slow)
+        for i in reversed(dead):
+            sse_subscribers.pop(i)
+        count = len(sse_subscribers)
+    if count > 0:
+        print(f"[sse] Broadcast to {count} clients")
+
+
 async def refresh_data():
-    """Refresh market data from the finance API."""
+    """Refresh market data from the finance API and broadcast via SSE."""
     global latest_data
     async with fetch_lock:
         print("[refresh] Fetching fresh market data...")
@@ -235,6 +257,9 @@ async def refresh_data():
                 }
                 valid = sum(1 for c in countries if c.get("price"))
                 print(f"[refresh] ✓ Updated {valid}/{len(countries)} countries with live prices")
+
+                # Broadcast to all SSE subscribers
+                await broadcast_to_subscribers(latest_data)
             else:
                 print("[refresh] No valid data extracted, keeping old data")
 
@@ -245,10 +270,10 @@ async def refresh_data():
 
 
 async def periodic_refresh():
-    """Background task: refresh data every hour."""
+    """Background task: refresh data every REFRESH_INTERVAL seconds."""
     while True:
         await refresh_data()
-        await asyncio.sleep(3600)  # 1 hour
+        await asyncio.sleep(REFRESH_INTERVAL)
 
 
 @asynccontextmanager
@@ -265,6 +290,52 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 @app.get("/api/market-data")
 def get_market_data():
     return latest_data
+
+
+@app.get("/api/stream")
+async def stream_market_data(request: Request):
+    """SSE endpoint — pushes market data updates in real time."""
+    q: asyncio.Queue = asyncio.Queue(maxsize=50)
+
+    async with sse_lock:
+        sse_subscribers.append(q)
+
+    async def event_generator():
+        try:
+            # Send current data immediately on connect
+            if latest_data.get("countries"):
+                yield f"data: {json.dumps(latest_data)}\n\n"
+
+            # Send heartbeat info
+            yield f"event: connected\ndata: {{\"refreshInterval\": {REFRESH_INTERVAL}}}\n\n"
+
+            while True:
+                # Check if client disconnected
+                if await request.is_disconnected():
+                    break
+
+                try:
+                    payload = await asyncio.wait_for(q.get(), timeout=30)
+                    yield payload
+                except asyncio.TimeoutError:
+                    # Send keepalive comment every 30s
+                    yield ": keepalive\n\n"
+        finally:
+            async with sse_lock:
+                try:
+                    sse_subscribers.remove(q)
+                except ValueError:
+                    pass
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @app.post("/api/refresh")
