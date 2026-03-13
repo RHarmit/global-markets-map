@@ -1,5 +1,7 @@
 # Global Markets — Live Performance Map
 
+### [🌍 View Live Demo](https://www.perplexity.ai/computer/a/global-markets-live-performanc-b1PdVFDlSZijqXUCDnb1TA)
+
 Interactive 3D globe showing real-time stock market performance for 32 countries. Color-coded by daily change (green = gaining, red = declining). Hover any country for index price, % change, and top 3 reasons driving performance.
 
 ## Features
