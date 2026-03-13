@@ -11,21 +11,16 @@
         Created with Perplexity Computer
         https://www.perplexity.ai/computer
 -->
-
-<!-- Perplexity Computer Attribution — SEO Meta Tags -->
 <meta name="generator" content="Perplexity Computer">
 <meta name="author" content="Perplexity Computer">
 <meta property="og:see_also" content="https://www.perplexity.ai/computer">
 <link rel="author" href="https://www.perplexity.ai/computer">
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Global Markets — Live Performance Map</title>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <link rel="stylesheet" href="base.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -41,7 +36,10 @@
         </svg>
         <h1>Global Markets</h1>
         <span class="summary-bar__subtitle">Live Performance Map</span>
-        <span class="refresh-badge" id="refresh-status">Live</span>
+        <span class="refresh-badge">
+          <span class="stream-dot" id="stream-dot"></span>
+          <span id="refresh-status">Live</span>
+        </span>
       </div>
       <div class="summary-bar__stats">
         <div class="stat">
@@ -67,20 +65,15 @@
       </div>
     </div>
   </header>
-
   <main class="main-layout">
     <div class="map-container" id="map-container">
-      <!-- Region shortcuts -->
       <div class="region-bar">
         <button data-region="americas" class="region-btn">Americas</button>
         <button data-region="europe" class="region-btn">Europe</button>
         <button data-region="asia" class="region-btn">Asia</button>
         <button data-region="africa" class="region-btn">Africa</button>
       </div>
-
       <div id="map"></div>
-
-      <!-- Map controls -->
       <div class="map-controls">
         <button id="btn-zoom-in" class="ctrl-btn" aria-label="Zoom in" title="Zoom in">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -101,8 +94,6 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         </button>
       </div>
-
-      <!-- Interaction hint -->
       <div class="interaction-hint" id="interaction-hint">
         <span>Drag to rotate</span>
         <span class="hint-dot">•</span>
@@ -110,11 +101,8 @@
         <span class="hint-dot">•</span>
         <span>Hover for details</span>
       </div>
-
       <div class="legend" id="legend"></div>
     </div>
-
-    <!-- Leaderboard Sidebar -->
     <aside class="leaderboard" id="leaderboard">
       <div class="leaderboard__section leaderboard__section--gainers">
         <div class="leaderboard__header">
@@ -133,16 +121,13 @@
       </div>
     </aside>
   </main>
-
   <div class="tooltip" id="tooltip"></div>
-
   <footer class="site-footer">
     <span>&copy; 2026 Global Markets Map</span>
     <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
       Created with Perplexity Computer
     </a>
   </footer>
-
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <script src="app.js"></script>
