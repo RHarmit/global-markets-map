@@ -79,6 +79,43 @@ function updateSummaryBar() {
   }
 }
 
+// ── Leaderboard Sidebar ──────────────────────────────────────
+function updateLeaderboard() {
+  if (!MARKET_DATA) return;
+  const countries = [...MARKET_DATA.countries].filter(c => c.changePercent != null);
+
+  // Sort: gainers descending, losers ascending (most negative first)
+  const gainers = countries.filter(c => c.changePercent > 0)
+    .sort((a, b) => b.changePercent - a.changePercent);
+  const losers = countries.filter(c => c.changePercent < 0)
+    .sort((a, b) => a.changePercent - b.changePercent);
+
+  const gainersList = document.getElementById('gainers-list');
+  const losersList = document.getElementById('losers-list');
+  if (!gainersList || !losersList) return;
+
+  gainersList.innerHTML = gainers.length ? gainers.map((c, i) => buildLeaderboardRow(c, i, 'gainer')).join('') 
+    : '<div class="lb-empty">No gainers today</div>';
+  losersList.innerHTML = losers.length ? losers.map((c, i) => buildLeaderboardRow(c, i, 'loser')).join('')
+    : '<div class="lb-empty">No losers today</div>';
+}
+
+function buildLeaderboardRow(c, index, type) {
+  const isUp = type === 'gainer';
+  const pct = formatPercent(c.changePercent);
+  const firstClass = index === 0 ? `lb-row--first lb-row--${type}` : '';
+  return `
+    <div class="lb-row ${firstClass}">
+      <span class="lb-row__rank">${index + 1}</span>
+      <span class="lb-row__flag">${c.flag}</span>
+      <div class="lb-row__info">
+        <div class="lb-row__country">${c.country}</div>
+        <div class="lb-row__index">${c.index}</div>
+      </div>
+      <span class="lb-row__change ${isUp ? 'lb-row__change--up' : 'lb-row__change--down'}">${pct}</span>
+    </div>`;
+}
+
 // ── Legend ────────────────────────────────────────────────────
 function buildLegend() {
   const legend = document.getElementById('legend');
@@ -406,6 +443,7 @@ async function fetchLiveData() {
     if (data && data.countries && data.countries.length > 0 && data.countries.some(c => c.price)) {
       processData(data);
       updateSummaryBar();
+      updateLeaderboard();
       buildLegend();
       renderCountries();
       if (statusEl) { statusEl.textContent = 'Live'; statusEl.classList.remove('active'); }
@@ -439,6 +477,7 @@ async function init() {
   // Start with fallback data immediately
   processData(FALLBACK_DATA);
   updateSummaryBar();
+  updateLeaderboard();
   buildLegend();
   await buildMap();
   setupControls();
