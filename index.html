@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Markets — Live Performance Map</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="summary-bar">
+    <div class="summary-bar__inner">
+      <div class="summary-bar__title">
+        <svg class="summary-bar__logo" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-label="Globe icon">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <ellipse cx="12" cy="12" rx="5" ry="10" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M4.5 6.5h15M4.5 17.5h15" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+        </svg>
+        <h1>Global Markets</h1>
+        <span class="summary-bar__subtitle">Live Performance Map</span>
+        <span class="refresh-badge" id="refresh-status">Live</span>
+      </div>
+      <div class="summary-bar__stats">
+        <div class="stat">
+          <span class="stat__label">Countries</span>
+          <span class="stat__value" id="stat-total">—</span>
+        </div>
+        <div class="stat stat--up">
+          <span class="stat__label">Gaining</span>
+          <span class="stat__value" id="stat-up">—</span>
+        </div>
+        <div class="stat stat--down">
+          <span class="stat__label">Declining</span>
+          <span class="stat__value" id="stat-down">—</span>
+        </div>
+        <div class="stat">
+          <span class="stat__label">Updated</span>
+          <span class="stat__value stat__value--time" id="stat-updated">—</span>
+        </div>
+        <div class="stat">
+          <span class="stat__label">Next Refresh</span>
+          <span class="stat__value stat__value--time" id="next-refresh">60m 00s</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="map-container" id="map-container">
+    <!-- Region shortcuts -->
+    <div class="region-bar">
+      <button data-region="americas" class="region-btn">Americas</button>
+      <button data-region="europe" class="region-btn">Europe</button>
+      <button data-region="asia" class="region-btn">Asia</button>
+      <button data-region="africa" class="region-btn">Africa</button>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Map controls -->
+    <div class="map-controls">
+      <button id="btn-zoom-in" class="ctrl-btn" aria-label="Zoom in" title="Zoom in">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <span class="ctrl-zoom-level" id="zoom-level">100%</span>
+      <button id="btn-zoom-out" class="ctrl-btn" aria-label="Zoom out" title="Zoom out">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div class="ctrl-divider"></div>
+      <button id="btn-rotate-left" class="ctrl-btn" aria-label="Rotate left" title="Rotate left">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+      </button>
+      <button id="btn-rotate-right" class="ctrl-btn" aria-label="Rotate right" title="Rotate right">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg>
+      </button>
+      <div class="ctrl-divider"></div>
+      <button id="btn-reset" class="ctrl-btn" aria-label="Reset view" title="Reset view">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </button>
+    </div>
+
+    <!-- Interaction hint -->
+    <div class="interaction-hint" id="interaction-hint">
+      <span>Drag to rotate</span>
+      <span class="hint-dot">•</span>
+      <span>Scroll to zoom</span>
+      <span class="hint-dot">•</span>
+      <span>Hover for details</span>
+    </div>
+
+    <div class="legend" id="legend"></div>
+  </main>
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <footer class="site-footer">
+    <span>&copy; 2026 Global Markets Map</span>
+    <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
+      Created with Perplexity Computer
+    </a>
+  </footer>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <script src="app.js"></script>
+</body>
+</html>
